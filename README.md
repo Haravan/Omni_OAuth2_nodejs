@@ -3,6 +3,7 @@
 run:
 
 $npm install
+
 $node server.js
 
 Opne link : http://localhost:3000

@@ -221,7 +221,7 @@ async function subscribe(access_token) {
         if (error) {
           console.log(error);
         }
-        console.log('subscribe webhook success');
+        console.log(body);
         resolve();
       });
     } catch (e) {
@@ -258,7 +258,7 @@ function webhookValidate(req, res, next) {
     .update(new Buffer(haravanBody, 'utf8'))
     .digest('hex');
 
-  if (sh === header) {
+  if (sh !== header) {
     return res.status(401).send();
   }
 

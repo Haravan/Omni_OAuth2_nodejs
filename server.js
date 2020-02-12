@@ -6,8 +6,9 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const request = require("request");
 const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
+var path = require('path');
+const HaravanValidate = require(path.resolve('./haravan-validate'));
+
 
 const config = {
   response_mode: 'form_post',
@@ -16,8 +17,8 @@ const config = {
   grant_type: 'authorization_code',
   nonce: 'asdfasdgd',
   response_type: 'code id_token',
-  app_id: '270acd3c5f191a85fae7b063335bfec6',
-  app_secret: '87040444d8ae7198856bddf3b7185b8b66b584dd66e7fa3fed69eed4545f089f',
+  app_id: '60f6db26e7032c153ecccdc915aee018',
+  app_secret: '6f118391d30f328397b524efdb427944ded1b596220488ba9ed4cff2d3e5dcc8',
   scope_login: 'openid profile email org userinfo',
   scope: 'offline_access openid profile email org userinfo com.read_products wh_api grant_service',
   login_callback_url: 'http://localhost:3000/install/login',
@@ -27,6 +28,16 @@ const config = {
     subscribe: 'https://webhook.haravan.com/api/subscribe'
   },
 };
+
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+var haravanValidate = new HaravanValidate(config.app_secret);
+app.use(haravanValidate);
+app.use(bodyParser.json());
+
 
 
 function buildUrlLogin() {
@@ -204,7 +215,6 @@ app.post('/install/grandservice', async (req, res) => {
 });
 
 //--------------------------------------Webhook-----------------------------------//
-var crypto = require('crypto');
 async function subscribe(access_token) {
   return new Promise(resolve => {
     try {
@@ -221,7 +231,7 @@ async function subscribe(access_token) {
         if (error) {
           console.log(error);
         }
-        console.log(body);
+        console.log('subscribe webhook success');
         resolve();
       });
     } catch (e) {
@@ -245,21 +255,13 @@ function webhookValidate(req, res, next) {
   let shop = req.headers['x-haravan-org-id'] || '';
   let signature = req.headers['x-haravan-hmac-sha256'] || '';
   let topic = req.headers['x-haravan-topic'] || '';
-  let haravanBody = req.body.toString() || '';
+
   if (!shop || !signature || !topic) {
     return res.sendStatus(401);
   }
 
-  var header = req.get('x-haravan-hmac-sha256');
-  var token_secret = config.app_secret;
-
-  var sh = crypto
-    .createHmac('sha1', token_secret)
-    .update(new Buffer(haravanBody, 'utf8'))
-    .digest('hex');
-
-  if (sh !== header) {
-    return res.status(401).send();
+  if (!req.fromHaravan(config.app_secret)) {
+    return res.sendStatus(401);
   }
 
   next();

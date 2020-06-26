@@ -253,7 +253,7 @@ app.get('/webhooks', (req, res) => {
 
 function webhookValidate(req, res, next) {
   let shop = req.headers['x-haravan-org-id'] || '';
-  let signature = req.headers['x-haravan-hmac-sha256'] || '';
+  let signature = req.headers['X-Haravan-Hmacsha256'] || '';
   let topic = req.headers['x-haravan-topic'] || '';
 
   if (!shop || !signature || !topic) {

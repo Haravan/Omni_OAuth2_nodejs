@@ -7,7 +7,7 @@ function haravan(secret, field) {
         return new haravan(secret, field);
 
     if (!secret) throw new Error('secret is required');
-    field = field || 'x-haravan-hmac-sha256';
+    field = field || 'X-Haravan-Hmacsha256';
 
     return function(req, res, next) {
 
@@ -25,9 +25,9 @@ function haravan(secret, field) {
             req.fromHaravan = function() {
                 var header = req.get(field);
                 var sh = crypto
-                    .createHmac('sha1', secret)
+                    .createHmac('sha256', secret)
                     .update(new Buffer(req.haravanBody, 'utf8'))
-                    .digest('hex')
+                    .digest('base64')
 
                 return sh === header;
             };
